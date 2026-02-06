@@ -14,13 +14,13 @@ st.set_page_config(page_title="Ultimate Stat Logger", page_icon="🫏", layout="
 def init_state():
     if "logger" not in st.session_state:
         # Simple defaults; you can paste/override in the sidebar
-        A = ["A1","A2","A3","A4","A5","A6","A7"]
-        B = ["B1","B2","B3","B4","B5","B6","B7"]
+        A = []
+        B = []
         st.session_state.logger = UltimateStatLogger(onfield_A=A, onfield_B=B)
     if "team_names" not in st.session_state:
-        st.session_state.team_names = {"A": "Team A", "B": "Team B"}
+        st.session_state.team_names = {"A": "Team Light", "B": "Team Dark"}
     if "roster_lists" not in st.session_state:
-        # Start each roster as the current on-field 7; you can add more below
+        # Start each roster as the current on-field 5; you can add more below
         st.session_state.roster_lists = {
             "A": list(st.session_state.logger.onfield["A"]),
             "B": list(st.session_state.logger.onfield["B"]),
@@ -52,12 +52,12 @@ st.sidebar.header("⚙️ Setup")
 st.sidebar.write("Manage team names, rosters, and on-field lineups.")
 
 with st.sidebar.expander("Team Names", expanded=False):
-    name_A = st.text_input("Team A label", value=st.session_state.team_names["A"], key="nmA")
-    name_B = st.text_input("Team B label", value=st.session_state.team_names["B"], key="nmB")
+    name_A = st.text_input("Team Light label", value=st.session_state.team_names["A"], key="nmA")
+    name_B = st.text_input("Team Dark label", value=st.session_state.team_names["B"], key="nmB")
     st.session_state.team_names = {"A": name_A, "B": name_B}
 
 with st.sidebar.expander("Roster Manager", expanded=True):
-    st.caption("Add/remove/reorder players. Then set the on-field 7.")
+    st.caption("Add/remove/reorder players. Then set the on-field 5.")
 
     for team_key in ("A", "B"):
         st.subheader(f"{st.session_state.team_names[team_key]} roster")
@@ -110,25 +110,25 @@ with st.sidebar.expander("Roster Manager", expanded=True):
         st.markdown("**Set on-field**")
         oc1, oc2 = st.columns(2)
         with oc1:
-            if st.button("Use first 7", key=f"first7_{team_key}"):
-                if len(roster) < 7:
-                    st.error("Need at least 7 players.")
+            if st.button("Use first 5", key=f"first5_{team_key}"):
+                if len(roster) < 5:
+                    st.error("Need at least 5 players.")
                 else:
-                    logger.onfield[team_key] = roster[:7]
-                    st.success("On-field set to first 7.")
+                    logger.onfield[team_key] = roster[:5]
+                    st.success("On-field set to first 5.")
         with oc2:
-            # Custom 7 selection
+            # Custom 5 selection
             opts = roster
             default = [p for p in logger.onfield[team_key] if p in opts]
             chosen = st.multiselect(
-                f"{st.session_state.team_names[team_key]}: pick exactly 7",
+                f"{st.session_state.team_names[team_key]}: pick exactly 5",
                 options=opts,
                 default=default,
-                key=f"pick7_{team_key}"
+                key=f"pick5_{team_key}"
             )
-            if st.button("Apply 7", key=f"apply7_{team_key}"):
-                if len(chosen) != 7:
-                    st.error("Select exactly 7 players.")
+            if st.button("Apply 5", key=f"apply5_{team_key}"):
+                if len(chosen) != 5:
+                    st.error("Select exactly 5 players.")
                 else:
                     logger.onfield[team_key] = list(chosen)
                     st.success("On-field updated.")
@@ -169,15 +169,15 @@ st.divider()
 # Action Buttons Row
 # ---------------------------
 
-bcol1, bcol2, bcol3, bcol4, bcol5, bcol6, bcol7 = st.columns([1.2,1.2,1.2,1.2,1.2,1.2,1.2])
+bcol1, bcol2, bcol3, bcol4, bcol5, bcol6, bcol5 = st.columns([1.2,1.2,1.2,1.2,1.2,1.2,1.2])
 with bcol1:
-    if st.button("Score (S)", use_container_width=True):
+    if st.button("Score", use_container_width=True):
         try:
             logger.press_score()
         except Exception as e:
             st.error(str(e))
 with bcol2:
-    if st.button("Drop (O)", use_container_width=True):
+    if st.button("Drop", use_container_width=True):
         try:
             logger.press_drop()
         except Exception as e:
@@ -189,7 +189,7 @@ with bcol3:
         except Exception as e:
             st.error(str(e))
 with bcol4:
-    if st.button("Pull (P)", use_container_width=True):
+    if st.button("Pull", use_container_width=True):
         try:
             logger.press_pull()
         except Exception as e:
@@ -200,7 +200,7 @@ with bcol5:
 with bcol6:
     if st.button("Undo last", use_container_width=True):
         logger.undo_last(1)
-with bcol7:
+with bcol5:
     if st.button("Reset session", use_container_width=True):
         st.session_state.clear()
         st.rerun()
@@ -273,10 +273,10 @@ with st.expander("How to use (quick recap)"):
         """
 - **PASS**: click same-team consecutive players.
 - **Cross-team click**: auto `TURN` (on thrower) + `D` (to clicked defender).
-- **Drop (O)**: click the dropper, then **Drop (O)**. (Revokes the just-logged PASS to that receiver, if any.)
+- **Drop**: click the dropper, then **Drop**. (Revokes the just-logged PASS to that receiver, if any.)
 - **Turn**: click the thrower, then **Turn** (no D). Next click must be other team to set holder.
-- **Score (S)**: click the scoring receiver, then **Score (S)**. Increments point; expect a **Pull (P)** next.
-- **Pull (P)**: click the puller, then **Pull (P)**. First receiving click sets holder (no PASS).
+- **Score**: click the scoring receiver, then **Score**. Increments point; expect a **Pull** next.
+- **Pull**: click the puller, then **Pull**. First receiving click sets holder (no PASS).
 - **Sub**: press **Sub** → click **OUT** → click **IN**. Logged as `SUB` with on-field snapshots.
         """
     )
